@@ -60,6 +60,55 @@ function EditServerModal({ closeModal, initialValue, onSave }: { closeModal: () 
   );
 }
 
+// Modal component for editing port
+function EditPortModal({ closeModal, initialValue, onSave }: { closeModal: () => void; initialValue: string; onSave: (newValue: string) => void }) {
+  const [value, setValue] = useState(initialValue);
+
+  return (
+    <Focusable style={{ padding: "20px", backgroundColor: "#1a1a1a", borderRadius: "5px" }}>
+      <div style={{ marginBottom: "10px" }}>Edit Port</div>
+      <TextField
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Enter port number"
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+        <DialogButton onClick={() => { onSave(value); closeModal(); }}>
+          Save
+        </DialogButton>
+        <DialogButton onClick={closeModal}>
+          Cancel
+        </DialogButton>
+      </div>
+    </Focusable>
+  );
+}
+
+// Modal component for editing password
+function EditPasswordModal({ closeModal, initialValue, onSave }: { closeModal: () => void; initialValue: string; onSave: (newValue: string) => void }) {
+  const [value, setValue] = useState(initialValue);
+
+  return (
+    <Focusable style={{ padding: "20px", backgroundColor: "#1a1a1a", borderRadius: "5px" }}>
+      <div style={{ marginBottom: "10px" }}>Edit Password</div>
+      <TextField
+        type="password"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Enter password"
+      />
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px" }}>
+        <DialogButton onClick={() => { onSave(value); closeModal(); }}>
+          Save
+        </DialogButton>
+        <DialogButton onClick={closeModal}>
+          Cancel
+        </DialogButton>
+      </div>
+    </Focusable>
+  );
+}
+
 function Content() {
   // Encryption method options
   const METHOD_OPTIONS: DropdownOption[] = [
@@ -168,23 +217,74 @@ function Content() {
     close = modal.closeModal;
   };
 
+  const openPortModal = () => {
+    let close: () => void;
+    const modal = showModal(
+      <EditPortModal
+        initialValue={port}
+        onSave={async (newValue: string) => {
+          const portNum = parseInt(newValue, 10);
+          if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+            toaster.toast({ title: "Error", body: "Port must be between 1 and 65535" });
+            return;
+          }
+          setPort(newValue);
+          globalPort = portNum;
+          try {
+            await setSetting("port", portNum);
+            console.log("Port saved:", portNum);
+          } catch (error) {
+            console.error("Failed to save port:", error);
+            toaster.toast({ title: "Error", body: "Failed to save port" });
+          }
+        }}
+        closeModal={() => close()}
+      />,
+      false,
+      true
+    );
+    close = modal.closeModal;
+  };
+
+  const openPasswordModal = () => {
+    let close: () => void;
+    const modal = showModal(
+      <EditPasswordModal
+        initialValue={password}
+        onSave={async (newValue: string) => {
+          setPassword(newValue);
+          globalPassword = newValue;
+          try {
+            await setSetting("password", newValue);
+            console.log("Password saved:", newValue);
+          } catch (error) {
+            console.error("Failed to save password:", error);
+            toaster.toast({ title: "Error", body: "Failed to save password" });
+          }
+        }}
+        closeModal={() => close()}
+      />,
+      false,
+      true
+    );
+    close = modal.closeModal;
+  };
+
   return (
     <PanelSection title="ShadowSocks Configuration">
-      {/* Server Field - Now with modal */}
+      {/* Server Field - With modal */}
       <PanelSectionRow>
         <div>Server Address: {server}</div>
         <ButtonItem layout="below" onClick={openServerModal}>
           Edit Server
         </ButtonItem>
       </PanelSectionRow>
-      {/* Port Field */}
+      {/* Port Field - With modal */}
       <PanelSectionRow>
-        <div>Port</div>
-        <TextField
-          value={port}
-          onChange={(e) => setPort(e.target.value)}
-          placeholder="Enter port number"
-        />
+        <div>Port: {port}</div>
+        <ButtonItem layout="below" onClick={openPortModal}>
+          Edit Port
+        </ButtonItem>
       </PanelSectionRow>
       {/* Method Field */}
       <PanelSectionRow>
@@ -196,20 +296,17 @@ function Content() {
           onChange={handleMethodChange}
         />
       </PanelSectionRow>
-      {/* Password Field */}
+      {/* Password Field - With modal */}
       <PanelSectionRow>
-        <div>Password</div>
-        <TextField
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter password"
-        />
+        <div>Password: {password ? '********' : ''}</div>
+        <ButtonItem layout="below" onClick={openPasswordModal}>
+          Edit Password
+        </ButtonItem>
       </PanelSectionRow>
-      {/* Save Button */}
+      {/* Save Button - Optional now, but kept for bulk save if needed */}
       <PanelSectionRow>
         <ButtonItem layout="below" onClick={handleSaveSettings}>
-          {saveStatus || "Save Settings"}
+          {saveStatus || "Save All Settings"}
         </ButtonItem>
       </PanelSectionRow>
     </PanelSection>
