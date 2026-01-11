@@ -21,7 +21,6 @@ import {
 import { useState, useEffect } from "react";
 import { FaShip } from "react-icons/fa";
 
-// Callable functions
 const setSetting = callable<[key: string, value: any], boolean>("set_setting");
 const getAllSettings = callable<[], {
   server: string,
@@ -29,21 +28,17 @@ const getAllSettings = callable<[], {
   method: string,
   password: string
 }>("get_all_settings");
-
 const getEnabledState = callable<[], boolean>("get_enabled_state");
 const startShadowsocks = callable<[], boolean>("start_shadowsocks");
 const stopShadowsocks = callable<[], boolean>("stop_shadowsocks");
 
-// Modal components
 function EditServerModal({ closeModal, initialValue, onSave }: { closeModal: () => void; initialValue: string; onSave: (newValue: string) => void }) {
   const [value, setValue] = useState(initialValue);
-  
   const handleSave = () => {
     console.log("[FRONTEND] EditServerModal: Saving value:", value);
     onSave(value);
     closeModal();
   };
-  
   return (
     <Focusable style={{ padding: "20px", backgroundColor: "#1a1a1a", borderRadius: "5px" }}>
       <div style={{ marginBottom: "10px" }}>Edit Server Address</div>
@@ -66,13 +61,11 @@ function EditServerModal({ closeModal, initialValue, onSave }: { closeModal: () 
 
 function EditPortModal({ closeModal, initialValue, onSave }: { closeModal: () => void; initialValue: string; onSave: (newValue: string) => void }) {
   const [value, setValue] = useState(initialValue);
-  
   const handleSave = () => {
     console.log("[FRONTEND] EditPortModal: Saving value:", value);
     onSave(value);
     closeModal();
   };
-  
   return (
     <Focusable style={{ padding: "20px", backgroundColor: "#1a1a1a", borderRadius: "5px" }}>
       <div style={{ marginBottom: "10px" }}>Edit Port</div>
@@ -95,13 +88,11 @@ function EditPortModal({ closeModal, initialValue, onSave }: { closeModal: () =>
 
 function EditPasswordModal({ closeModal, initialValue, onSave }: { closeModal: () => void; initialValue: string; onSave: (newValue: string) => void }) {
   const [value, setValue] = useState(initialValue);
-  
   const handleSave = () => {
     console.log("[FRONTEND] EditPasswordModal: Saving password");
     onSave(value);
     closeModal();
   };
-  
   return (
     <Focusable style={{ padding: "20px", backgroundColor: "#1a1a1a", borderRadius: "5px" }}>
       <div style={{ marginBottom: "10px" }}>Edit Password</div>
@@ -151,27 +142,18 @@ function Content() {
     console.log("[FRONTEND] loadInitialSettings: Starting");
     setLoading(true);
     try {
-      // Load only configuration settings
       console.log("[FRONTEND] loadInitialSettings: Calling getAllSettings");
       const settings = await getAllSettings();
       console.log("[FRONTEND] loadInitialSettings: Settings received:", settings);
-      
       setServer(settings.server || "example.com");
       setPort(String(settings.port || 8388));
       setMethod(settings.method || "chacha20-ietf-poly1305");
       setPassword(settings.password || "");
-      
-      // Get current state
+
       console.log("[FRONTEND] loadInitialSettings: Calling getEnabledState");
       const currentState = await getEnabledState();
       console.log("[FRONTEND] loadInitialSettings: Current enabled state:", currentState);
-      
-      // Important: Decky Toggle works opposite of what you might expect
-      // If ShadowSocks is enabled, we want the toggle to show as "on" (slider to right)
-      // But in Decky, when toggle is "on", checked={false}
-      // So we need to invert the logic here
       setEnabled(currentState || false);
-      
       console.log("[FRONTEND] loadInitialSettings: Toggle state set to:", currentState || false);
     } catch (error) {
       console.error("[FRONTEND] loadInitialSettings: Failed to load settings:", error);
@@ -182,59 +164,43 @@ function Content() {
     }
   };
 
-  const handleToggle = async (checked: boolean) => {
-    console.log(`[FRONTEND] handleToggle: Called with checked=${checked}, current enabled=${enabled}, toggling=${toggling}`);
-    
+  const handleToggle = async (value: boolean) => {
+    console.log(`[FRONTEND] handleToggle: Called with value=${value}, current enabled=${enabled}, toggling=${toggling}`);
     if (toggling) {
       console.log("[FRONTEND] handleToggle: Already toggling, returning");
       return;
     }
-    
     setToggling(true);
     console.log("[FRONTEND] handleToggle: Set toggling to true");
-    
     try {
       let success;
-      
-      // Important: Decky Toggle sends the NEW state, not the opposite!
-      // If toggle shows OFF (checked=false) and user clicks it, 
-      // they want to turn it ON, so checked will be true
-      if (checked) {
+      if (value) {
         console.log("[FRONTEND] handleToggle: User wants to ENABLE ShadowSocks");
         success = await startShadowsocks();
       } else {
         console.log("[FRONTEND] handleToggle: User wants to DISABLE ShadowSocks");
         success = await stopShadowsocks();
       }
-
       console.log(`[FRONTEND] handleToggle: Backend returned success=${success}`);
-      
       if (success) {
-        setEnabled(checked);
-        console.log(`[FRONTEND] handleToggle: Set enabled to ${checked}`);
-        
-        const action = checked ? "start" : "stop";
-        const message = checked ? "ShadowSocks started" : "ShadowSocks stopped";
-        
-        toaster.toast({ 
-          title: "ShadowSocks", 
-          body: message 
+        setEnabled(value);
+        console.log(`[FRONTEND] handleToggle: Set enabled to ${value}`);
+        const message = value ? "ShadowSocks started" : "ShadowSocks stopped";
+        toaster.toast({
+          title: "ShadowSocks",
+          body: message
         });
-        
-        console.log(`[FRONTEND] handleToggle: ${action} ShadowSocks`);
+        console.log(`[FRONTEND] handleToggle: ${value ? 'start' : 'stop'} ShadowSocks`);
       } else {
-        throw new Error(`Backend operation failed for checked=${checked}`);
+        throw new Error(`Backend operation failed for value=${value}`);
       }
     } catch (error) {
       console.error("[FRONTEND] handleToggle: Error:", error);
-      
-      const action = checked ? "start" : "stop";
-      toaster.toast({ 
-        title: "Error", 
-        body: `Failed to ${action} ShadowSocks` 
+      const action = value ? "start" : "stop";
+      toaster.toast({
+        title: "Error",
+        body: `Failed to ${action} ShadowSocks`
       });
-      
-      // Don't change state since operation failed
       console.log("[FRONTEND] handleToggle: Operation failed, keeping enabled as", enabled);
     } finally {
       setToggling(false);
@@ -261,7 +227,6 @@ function Content() {
         }}
         closeModal={() => {
           console.log("[FRONTEND] openServerModal: Modal closed");
-          // Modal closes automatically when user clicks Save or Cancel
         }}
       />
     );
@@ -292,7 +257,6 @@ function Content() {
         }}
         closeModal={() => {
           console.log("[FRONTEND] openPortModal: Modal closed");
-          // Modal closes automatically when user clicks Save or Cancel
         }}
       />
     );
@@ -317,7 +281,6 @@ function Content() {
         }}
         closeModal={() => {
           console.log("[FRONTEND] openPasswordModal: Modal closed");
-          // Modal closes automatically when user clicks Save or Cancel
         }}
       />
     );
@@ -350,20 +313,20 @@ function Content() {
 
   console.log("[FRONTEND] Content: Rendering main content");
   console.log("[FRONTEND] Content: enabled state =", enabled);
-  console.log("[FRONTEND] Content: Toggle will show as", enabled ? "ON (slider right)" : "OFF (slider left)");
-  
+  console.log("[FRONTEND] Content: Toggle will show as", enabled ? "ON" : "OFF");
+
   return (
     <PanelSection title="ShadowSocks Configuration">
       <PanelSectionRow>
-        <div style={{ 
-          display: "flex", 
-          justifyContent: "space-between", 
-          alignItems: "center", 
-          width: "100%" 
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%"
         }}>
           <span>Enable ShadowSocks</span>
           <Toggle
-            checked={enabled}
+            value={enabled}
             onChange={handleToggle}
             disabled={toggling}
           />
@@ -372,21 +335,18 @@ function Content() {
           Current state: {enabled ? "ENABLED" : "DISABLED"}
         </div>
       </PanelSectionRow>
-
       <PanelSectionRow>
         <div>Server Address: {server}</div>
         <ButtonItem layout="below" onClick={openServerModal}>
           Edit Server
         </ButtonItem>
       </PanelSectionRow>
-
       <PanelSectionRow>
         <div>Port: {port}</div>
         <ButtonItem layout="below" onClick={openPortModal}>
           Edit Port
         </ButtonItem>
       </PanelSectionRow>
-
       <PanelSectionRow>
         <div>Encryption Method</div>
         <DropdownItem
@@ -396,7 +356,6 @@ function Content() {
           onChange={handleMethodChange}
         />
       </PanelSectionRow>
-
       <PanelSectionRow>
         <div>Password: {password ? '********' : '(not set)'}</div>
         <ButtonItem layout="below" onClick={openPasswordModal}>
