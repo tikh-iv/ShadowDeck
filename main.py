@@ -11,6 +11,30 @@ settings = SettingsManager(name="shadowsocks", settings_directory=settings_dir)
 settings.read()
 
 class Plugin:
+    def __init__(self):
+        # In-memory only, not saved to settings
+        self.enabled = False
+        decky.logger.info(f"[BACKEND] Plugin initialized with enabled={self.enabled}")
+
+    async def start_shadowsocks(self):
+        decky.logger.info("[BACKEND] START SHADOWSOCKS called")
+        # TODO: Add actual ShadowSocks startup code here
+        self.enabled = True
+        decky.logger.info(f"[BACKEND] Enabled set to {self.enabled}")
+        return True
+
+    async def stop_shadowsocks(self):
+        decky.logger.info("[BACKEND] STOP SHADOWSOCKS called")
+        # TODO: Add actual ShadowSocks shutdown code here
+        self.enabled = False
+        decky.logger.info(f"[BACKEND] Enabled set to {self.enabled}")
+        return True
+
+    async def get_enabled_state(self):
+        """Get current enabled state (read-only)"""
+        decky.logger.info(f"[BACKEND] get_enabled_state called, returning: {self.enabled}")
+        return self.enabled
+    
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):
         self.loop = asyncio.get_event_loop()
