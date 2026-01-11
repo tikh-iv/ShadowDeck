@@ -6,7 +6,6 @@ import {
   TextField,
   staticClasses,
   DropdownOption,
-  Field,
 } from "@decky/ui";
 import {
   addEventListener,
@@ -111,74 +110,64 @@ function Content() {
     }
   };
 
+  // Use the same pattern that worked with numbers
   const handleMethodChange = (option: DropdownOption) => {
     const newMethod = String(option.data);
-    console.log("Changing method to:", newMethod);
+    console.log("Method change: updating to", newMethod);
+    
+    // Update global variable
+    globalMethod = newMethod;
+    
+    // Update state for UI
     setMethod(newMethod);
+    
+    // Save immediately
+    setSetting("method", newMethod);
+    console.log("Method saved:", newMethod);
   };
 
   return (
     <PanelSection title="ShadowSocks Configuration">
       {/* Server Field */}
       <PanelSectionRow>
-        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
-          Server Address
-        </div>
+        <div>Server Address</div>
         <TextField
           value={server}
           onChange={(e) => setServer(e.target.value)}
-          placeholder="Enter server address (e.g., example.com)"
+          placeholder="Enter server address"
         />
-        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
-          Current: {server}
-        </div>
       </PanelSectionRow>
 
       {/* Port Field */}
       <PanelSectionRow>
-        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
-          Port
-        </div>
+        <div>Port</div>
         <TextField
           value={port}
           onChange={(e) => setPort(e.target.value)}
-          placeholder="Enter port number (1-65535)"
+          placeholder="Enter port number"
         />
-        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
-          Current: {port}
-        </div>
       </PanelSectionRow>
 
-      {/* Method Field - Dropdown */}
+      {/* Method Field */}
       <PanelSectionRow>
-        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
-          Encryption Method
-        </div>
+        <div>Encryption Method</div>
         <DropdownItem
           menuLabel="Select encryption method"
           rgOptions={METHOD_OPTIONS}
           selectedOption={method}
           onChange={handleMethodChange}
         />
-        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
-          Current: {method}
-        </div>
       </PanelSectionRow>
 
       {/* Password Field */}
       <PanelSectionRow>
-        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
-          Password
-        </div>
+        <div>Password</div>
         <TextField
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter password"
         />
-        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
-          Password is {password ? "set" : "not set"}
-        </div>
       </PanelSectionRow>
 
       {/* Save Button */}
@@ -194,7 +183,6 @@ function Content() {
 export default definePlugin(() => {
   console.log("ShadowSocks Plugin initializing...");
 
-  // Event listener example (kept from original template)
   const listener = addEventListener<[string, boolean, number]>(
     "timer_event",
     (test1, test2, test3) => {
