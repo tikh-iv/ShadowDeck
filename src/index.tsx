@@ -209,6 +209,13 @@ function Content() {
   };
 
   const openServerModal = () => {
+    if (enabled) {
+      toaster.toast({
+        title: "Cannot Edit",
+        body: "Stop ShadowSocks to edit server settings"
+      });
+      return;
+    }
     console.log("[FRONTEND] openServerModal: Opening modal");
     showModal(
       <EditServerModal
@@ -233,6 +240,13 @@ function Content() {
   };
 
   const openPortModal = () => {
+    if (enabled) {
+      toaster.toast({
+        title: "Cannot Edit",
+        body: "Stop ShadowSocks to edit port settings"
+      });
+      return;
+    }
     console.log("[FRONTEND] openPortModal: Opening modal");
     showModal(
       <EditPortModal
@@ -263,6 +277,13 @@ function Content() {
   };
 
   const openPasswordModal = () => {
+    if (enabled) {
+      toaster.toast({
+        title: "Cannot Edit",
+        body: "Stop ShadowSocks to edit password"
+      });
+      return;
+    }
     console.log("[FRONTEND] openPasswordModal: Opening modal");
     showModal(
       <EditPasswordModal
@@ -287,6 +308,13 @@ function Content() {
   };
 
   const handleMethodChange = async (option: DropdownOption) => {
+    if (enabled) {
+      toaster.toast({
+        title: "Cannot Edit",
+        body: "Stop ShadowSocks to change encryption method"
+      });
+      return;
+    }
     const newMethod = String(option.data);
     console.log("[FRONTEND] handleMethodChange: Changing method to:", newMethod);
     setMethod(newMethod);
@@ -333,32 +361,34 @@ function Content() {
         </div>
         <div style={{ fontSize: "12px", color: "#888", marginTop: "5px" }}>
           Current state: {enabled ? "ENABLED" : "DISABLED"}
+          {enabled && <div style={{ color: "#ff6b6b", marginTop: "2px" }}>Stop ShadowSocks to edit settings</div>}
         </div>
       </PanelSectionRow>
       <PanelSectionRow>
-        <div>Server Address: {server}</div>
-        <ButtonItem layout="below" onClick={openServerModal}>
+        <div style={{ opacity: enabled ? 0.5 : 1 }}>Server Address: {server}</div>
+        <ButtonItem layout="below" onClick={openServerModal} disabled={enabled}>
           Edit Server
         </ButtonItem>
       </PanelSectionRow>
       <PanelSectionRow>
-        <div>Port: {port}</div>
-        <ButtonItem layout="below" onClick={openPortModal}>
+        <div style={{ opacity: enabled ? 0.5 : 1 }}>Port: {port}</div>
+        <ButtonItem layout="below" onClick={openPortModal} disabled={enabled}>
           Edit Port
         </ButtonItem>
       </PanelSectionRow>
       <PanelSectionRow>
-        <div>Encryption Method</div>
+        <div style={{ opacity: enabled ? 0.5 : 1 }}>Encryption Method</div>
         <DropdownItem
           menuLabel="Select encryption method"
           rgOptions={METHOD_OPTIONS}
           selectedOption={method}
           onChange={handleMethodChange}
+          disabled={enabled}
         />
       </PanelSectionRow>
       <PanelSectionRow>
-        <div>Password: {password ? '********' : '(not set)'}</div>
-        <ButtonItem layout="below" onClick={openPasswordModal}>
+        <div style={{ opacity: enabled ? 0.5 : 1 }}>Password: {password ? '********' : '(not set)'}</div>
+        <ButtonItem layout="below" onClick={openPasswordModal} disabled={enabled}>
           Edit Password
         </ButtonItem>
       </PanelSectionRow>
