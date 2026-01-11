@@ -48,7 +48,7 @@ function Content() {
 
   // State for UI
   const [server, setServer] = useState<string>(globalServer);
-  const [port, setPort] = useState<number>(globalPort);
+  const [port, setPort] = useState<string>(globalPort.toString());
   const [method, setMethod] = useState<string>(globalMethod);
   const [password, setPassword] = useState<string>(globalPassword);
   const [saveStatus, setSaveStatus] = useState<string>("");
@@ -72,7 +72,7 @@ function Content() {
       
       // Update state for UI
       setServer(globalServer);
-      setPort(globalPort);
+      setPort(globalPort.toString());
       setMethod(globalMethod);
       setPassword(globalPassword);
       
@@ -85,15 +85,21 @@ function Content() {
 
   const handleSaveSettings = async () => {
     try {
+      const portNum = parseInt(port, 10);
+      if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+        toaster.toast({ title: "Error", body: "Port must be between 1 and 65535" });
+        return;
+      }
+
       // Update global variables
       globalServer = server;
-      globalPort = port;
+      globalPort = portNum;
       globalMethod = method;
       globalPassword = password;
       
       // Save all settings
       await setSetting("server", server);
-      await setSetting("port", port);
+      await setSetting("port", portNum);
       await setSetting("method", method);
       await setSetting("password", password);
       
@@ -105,73 +111,75 @@ function Content() {
     }
   };
 
-  const handleServerChange = (value: string) => {
-    setServer(value);
-  };
-
-  const handlePortChange = (value: string) => {
-    const portNum = parseInt(value, 10);
-    if (!isNaN(portNum) && portNum >= 1 && portNum <= 65535) {
-      setPort(portNum);
-    }
-  };
-
   const handleMethodChange = (option: DropdownOption) => {
     const newMethod = String(option.data);
+    console.log("Changing method to:", newMethod);
     setMethod(newMethod);
-  };
-
-  const handlePasswordChange = (value: string) => {
-    setPassword(value);
   };
 
   return (
     <PanelSection title="ShadowSocks Configuration">
       {/* Server Field */}
-      <Field
-        label="Server Address"
-        description={<span>Current: {server}</span>}
-      >
+      <PanelSectionRow>
+        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
+          Server Address
+        </div>
         <TextField
           value={server}
-          onChange={(e) => handleServerChange(e.target.value)}
+          onChange={(e) => setServer(e.target.value)}
+          placeholder="Enter server address (e.g., example.com)"
         />
-      </Field>
+        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
+          Current: {server}
+        </div>
+      </PanelSectionRow>
 
       {/* Port Field */}
-      <Field
-        label="Port"
-        description={<span>Current: {port}</span>}
-      >
+      <PanelSectionRow>
+        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
+          Port
+        </div>
         <TextField
-          value={port.toString()}
-          onChange={(e) => handlePortChange(e.target.value)}
+          value={port}
+          onChange={(e) => setPort(e.target.value)}
+          placeholder="Enter port number (1-65535)"
         />
-      </Field>
+        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
+          Current: {port}
+        </div>
+      </PanelSectionRow>
 
-      {/* Method Field */}
-      <Field
-        label="Encryption Method"
-        description={<span>Current: {method}</span>}
-      >
+      {/* Method Field - Dropdown */}
+      <PanelSectionRow>
+        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
+          Encryption Method
+        </div>
         <DropdownItem
           menuLabel="Select encryption method"
           rgOptions={METHOD_OPTIONS}
           selectedOption={method}
           onChange={handleMethodChange}
         />
-      </Field>
+        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
+          Current: {method}
+        </div>
+      </PanelSectionRow>
 
       {/* Password Field */}
-      <Field
-        label="Password"
-        description={<span>Password is set</span>}
-      >
+      <PanelSectionRow>
+        <div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "1.1em" }}>
+          Password
+        </div>
         <TextField
+          type="password"
           value={password}
-          onChange={(e) => handlePasswordChange(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter password"
         />
-      </Field>
+        <div style={{ marginTop: "4px", color: "#aaa", fontSize: "0.9em" }}>
+          Password is {password ? "set" : "not set"}
+        </div>
+      </PanelSectionRow>
 
       {/* Save Button */}
       <PanelSectionRow>
