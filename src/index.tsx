@@ -126,7 +126,6 @@ function Content() {
   const [port, setPort] = useState<string>(globalPort.toString());
   const [method, setMethod] = useState<string>(globalMethod);
   const [password, setPassword] = useState<string>(globalPassword);
-  const [saveStatus, setSaveStatus] = useState<string>("");
 
   // Load settings only once on initial mount
   useEffect(() => {
@@ -152,31 +151,6 @@ function Content() {
     } catch (error) {
       console.error("Failed to load settings:", error);
       toaster.toast({ title: "Error", body: "Failed to load settings" });
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    try {
-      const portNum = parseInt(port, 10);
-      if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-        toaster.toast({ title: "Error", body: "Port must be between 1 and 65535" });
-        return;
-      }
-      // Update global variables
-      globalServer = server;
-      globalPort = portNum;
-      globalMethod = method;
-      globalPassword = password;
-      // Save all settings
-      await setSetting("server", server);
-      await setSetting("port", portNum);
-      await setSetting("method", method);
-      await setSetting("password", password);
-      setSaveStatus("Settings saved successfully!");
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (error) {
-      console.error("Failed to save settings:", error);
-      toaster.toast({ title: "Error", body: "Failed to save settings" });
     }
   };
 
@@ -301,12 +275,6 @@ function Content() {
         <div>Password: {password ? '********' : ''}</div>
         <ButtonItem layout="below" onClick={openPasswordModal}>
           Edit Password
-        </ButtonItem>
-      </PanelSectionRow>
-      {/* Save Button - Optional now, but kept for bulk save if needed */}
-      <PanelSectionRow>
-        <ButtonItem layout="below" onClick={handleSaveSettings}>
-          {saveStatus || "Save All Settings"}
         </ButtonItem>
       </PanelSectionRow>
     </PanelSection>
