@@ -26,12 +26,10 @@ jobs:
       - name: Build frontend
         run: pnpm run build
 
-      # Prepare Decky plugin folder
-      - name: Prepare ShadowDeck folder
+      - name: Prepare plugin folder
         run: |
           mkdir -p build/ShadowDeck
 
-          # Copy required files
           cp LICENSE build/ShadowDeck/
           cp README.md build/ShadowDeck/
           cp main.py build/ShadowDeck/
@@ -39,36 +37,32 @@ jobs:
           cp package.json build/ShadowDeck/
           cp defaults/config_template.json build/ShadowDeck/config_template.json
 
-          # Frontend
           mkdir -p build/ShadowDeck/dist
           cp dist/index.js build/ShadowDeck/dist/
 
-          # Python backend
           mkdir -p build/ShadowDeck/py_modules
           cp -r py_modules/shadowdeck build/ShadowDeck/py_modules/
 
-      # Get version from package.json
+          mkdir -p build/ShadowDeck/bin
+          touch build/ShadowDeck/bin/.keep
+
       - name: Read version
         id: version
         run: |
           echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      # Create ZIP
       - name: Create ZIP
         run: |
           cd build
           zip -r ShadowDeck-${{ steps.version.outputs.version }}.zip ShadowDeck
 
-      # Upload artifact
-      - name: Upload ZIP
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ShadowDeck
           path: build/ShadowDeck-*.zip
 
-      # Optional GitHub Release (no tags required)
       - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           tag: "v${{ steps.version.outputs.version }}"
