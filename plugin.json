@@ -4,8 +4,8 @@
   "flags": ["debug", "root"],
   "api_version": 1,
   "publish": {
-    "tags": ["vpn", "root"],
+    "tags": ["vpn", "root", "network", "proxy"],
     "description": "ShadowDeck allows you to access ShadowSocks connection.",
-    "image": "https://opengraph.githubassets.com/1/SteamDeckHomebrew/PluginLoader"
+    "image": "https://raw.githubusercontent.com/tikh-iv/ShadowDeck/refs/heads/main/assets/screenshot.png"
   }
 }
