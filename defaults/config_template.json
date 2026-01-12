@@ -1,0 +1,56 @@
+{
+  "dns": {
+    "servers": [
+      {
+        "tag": "remote",
+        "type": "tls",
+        "server": "1.1.1.1"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "interface_name": "tun0",
+      "address": [
+        "172.19.0.1/30"
+      ],
+      "auto_route": true,
+      "strict_route": true
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "shadowsocks",
+      "tag": "ss-remote",
+      "server": "${server}",
+      "server_port": ${port},
+      "method": "${method}",
+      "password": "${password}"
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    },
+    {
+      "type": "block",
+      "tag": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "final": "ss-remote",
+    "rules": [
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "inbound": "tun-in",
+        "ip_is_private": true,
+        "outbound": "direct"
+      }
+    ]
+  }
+}
