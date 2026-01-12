@@ -3,7 +3,7 @@ import subprocess
 import asyncio
 import decky_plugin
 from .config_renderer import ConfigRenderer
-
+                            
 class SingBoxManager:
     def __init__(self):
         self.process = None
