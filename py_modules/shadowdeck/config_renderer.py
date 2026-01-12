@@ -13,7 +13,7 @@ class ConfigRenderer:
         else:
             import tempfile
             self.data_dir = tempfile.mkdtemp(prefix="shadowdeck_")
-            decky_plugin.logger.info(f"[ConfigRenderer] DECKY_PLUGIN_RUNTIME_DIR is NOT DEFINED")
+            decky_plugin.logger.error(f"[ConfigRenderer] DECKY_PLUGIN_RUNTIME_DIR is NOT DEFINED")
 
     
     def render(self, server: str, port: int, method: str, password: str) -> str:
