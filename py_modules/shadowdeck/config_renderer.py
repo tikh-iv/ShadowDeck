@@ -6,12 +6,17 @@ import decky_plugin
 class ConfigRenderer:
     def __init__(self):
         self.plugin_dir = decky_plugin.DECKY_PLUGIN_DIR
+        
+        if hasattr(decky_plugin, 'DECKY_PLUGIN_RUNTIME_DIR'):
+            self.data_dir = decky_plugin.DECKY_PLUGIN_RUNTIME_DIR
+            decky_plugin.logger.info(f"[ConfigRenderer] DECKY_PLUGIN_RUNTIME_DIR is {decky_plugin.DECKY_PLUGIN_RUNTIME_DIR}")
+        else:
+            import tempfile
+            self.data_dir = tempfile.mkdtemp(prefix="shadowdeck_")
+            decky_plugin.logger.info(f"[ConfigRenderer] DECKY_PLUGIN_RUNTIME_DIR is NOT DEFINED")
+
     
     def render(self, server: str, port: int, method: str, password: str) -> str:
-        """
-        Renders the sing-box configuration JSON by substituting placeholders
-        in the template with user-provided values.
-        """
         template_path = os.path.join(self.plugin_dir, "config_template.json")
         
         try:
@@ -21,7 +26,6 @@ class ConfigRenderer:
             decky_plugin.logger.error(f"[ConfigRenderer] Template file not found at {template_path}")
             return None
         
-        # Use Python's string.Template for safe substitution
         template = Template(template_content)
         try:
             rendered = template.safe_substitute(
@@ -34,7 +38,6 @@ class ConfigRenderer:
             decky_plugin.logger.error(f"[ConfigRenderer] Failed to substitute template values: {e}")
             return None
         
-        # Optional: Validate that the rendered string is valid JSON
         try:
             json.loads(rendered)
         except json.JSONDecodeError as e:
@@ -43,15 +46,23 @@ class ConfigRenderer:
         
         return rendered
     
-    def save(self, config_json: str, output_path: str) -> bool:
+    def save(self, config_json: str) -> str:
         """
         Saves the rendered JSON configuration to a file.
+        Returns the path to the saved config file or None on failure.
         """
+        os.makedirs(self.data_dir, exist_ok=True)
+        config_path = os.path.join(self.data_dir, "singbox_config.json")
+        
         try:
-            with open(output_path, 'w') as f:
+            with open(config_path, 'w') as f:
                 f.write(config_json)
-            decky_plugin.logger.info(f"[ConfigRenderer] Config saved to: {output_path}")
-            return True
+            decky_plugin.logger.info(f"[ConfigRenderer] Config saved to: {config_path}")
+            return config_path
         except Exception as e:
-            decky_plugin.logger.error(f"[ConfigRenderer] Failed to save config to {output_path}: {e}")
-            return False
+            decky_plugin.logger.error(f"[ConfigRenderer] Failed to save config to {config_path}: {e}")
+            return None
+
+    def get_config_path(self) -> str:
+        """Returns the path where config is expected to be."""
+        return os.path.join(self.data_dir, "singbox_config.json")
