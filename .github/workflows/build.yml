@@ -1,0 +1,81 @@
+name: Build ShadowDeck
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build frontend
+        run: pnpm run build
+
+      # Prepare Decky plugin folder
+      - name: Prepare ShadowDeck folder
+        run: |
+          mkdir -p build/ShadowDeck
+
+          # Copy required files
+          cp LICENSE build/ShadowDeck/
+          cp README.md build/ShadowDeck/
+          cp main.py build/ShadowDeck/
+          cp plugin.json build/ShadowDeck/
+          cp package.json build/ShadowDeck/
+          cp defaults/config_template.json build/ShadowDeck/config_template.json
+
+          # Frontend
+          mkdir -p build/ShadowDeck/dist
+          cp dist/index.js build/ShadowDeck/dist/
+
+          # Python backend
+          mkdir -p build/ShadowDeck/py_modules
+          cp -r py_modules/shadowdeck build/ShadowDeck/py_modules/
+
+          # Binary (sing-box tar.gz)
+          mkdir -p build/ShadowDeck/bin
+          cp bin/*.tar.gz build/ShadowDeck/bin/
+
+      # Get version from package.json
+      - name: Read version
+        id: version
+        run: |
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      # Create ZIP
+      - name: Create ZIP
+        run: |
+          cd build
+          zip -r ShadowDeck-${{ steps.version.outputs.version }}.zip ShadowDeck
+
+      # Upload artifact
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShadowDeck
+          path: build/ShadowDeck-*.zip
+
+      # Optional GitHub Release (no tags required)
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "v${{ steps.version.outputs.version }}"
+          name: "ShadowDeck ${{ steps.version.outputs.version }}"
+          artifacts: "build/ShadowDeck-${{ steps.version.outputs.version }}.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
