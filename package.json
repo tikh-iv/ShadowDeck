@@ -1,6 +1,6 @@
 {
   "name": "shadow-deck",
-  "version": "1.1.6",
+  "version": "1.1.8",
   "description": "ShadowDeck allows you to access ShadowSocks connection",
   "type": "module",
   "remote_binary_bundling": true,
