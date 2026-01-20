@@ -1,11 +1,11 @@
 {
   "name": "shadow-deck",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "ShadowDeck allows you to access ShadowSocks connection",
   "type": "module",
   "remote_binary_bundling": true,
   "remote_binary": [
-    {
+    { 
       "name": "sing-box-1.12.15-linux-amd64.tar.gz",
       "url": "https://github.com/SagerNet/sing-box/releases/download/v1.12.15/sing-box-1.12.15-linux-amd64.tar.gz",
       "sha256hash": "cb83626415f5a0f0de7115f6488d405c22b1ff1fa2bd90976d632e0545db6d43"

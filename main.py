@@ -40,7 +40,7 @@ class Plugin:
         return success
     
     async def stop_shadowsocks(self):
-        decky_plugin.debug.info("[BACKEND] STOP SHADOWSOCKS called")
+        decky_plugin.logger.debug("[BACKEND] STOP SHADOWSOCKS called")
         
         success = await self.singbox_manager.stop()
         
