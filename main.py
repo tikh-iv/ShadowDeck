@@ -1,5 +1,7 @@
 import os
 import asyncio
+import urllib.request
+import ssl
 import shutil
 from settings import SettingsManager
 import decky_plugin
@@ -13,9 +15,8 @@ SINGBOX_ARCHIVE_NAME = "sing-box-1.12.15-linux-amd64.tar.gz"
 
 class Plugin:
     def __init__(self):
-        self.enabled = False
         self.singbox_manager = SingBoxManager()  # Initialize the manager
-        decky_plugin.logger.info(f"[BACKEND] Plugin initialized. Enabled={self.enabled}")
+        decky_plugin.logger.info("[BACKEND] Plugin initialized.")
     
     async def start_shadowsocks(self):
         decky_plugin.logger.info("[BACKEND] START SHADOWSOCKS called")
@@ -30,7 +31,8 @@ class Plugin:
         success = await self.singbox_manager.start(server, port, method, password)
         
         if success:
-            self.enabled = True
+            settings.setSetting("intended_enabled", True)
+            settings.commit()
             decky_plugin.logger.info("[BACKEND] ShadowSocks started successfully")
         else:
             decky_plugin.logger.error("[BACKEND] Failed to start ShadowSocks")
@@ -43,7 +45,8 @@ class Plugin:
         success = await self.singbox_manager.stop()
         
         if success:
-            self.enabled = False
+            settings.setSetting("intended_enabled", False)
+            settings.commit()
             decky_plugin.logger.info("[BACKEND] ShadowSocks stopped successfully")
         else:
             decky_plugin.logger.warning("[BACKEND] Could not stop ShadowSocks (may not have been running)")
@@ -51,8 +54,54 @@ class Plugin:
         return success
     
     async def get_enabled_state(self):
-        decky_plugin.logger.info(f"[BACKEND] get_enabled_state called, returning: {self.enabled}")
-        return self.enabled
+        intended_enabled = settings.getSetting("intended_enabled", False)
+        decky_plugin.logger.info(f"[BACKEND] get_enabled_state called, returning intended_enabled: {intended_enabled}")
+        return intended_enabled
+    
+    async def check_proxy_working(self) -> bool:
+        decky_plugin.logger.info("[BACKEND] Checking proxy working state via HTTPS test")
+        
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = True
+        ctx.verify_mode = ssl.CERT_REQUIRED
+
+        loop = asyncio.get_running_loop()
+
+        try:
+            resp = await loop.run_in_executor(
+                None,
+                lambda: urllib.request.urlopen(
+                    "https://google.com", timeout=3, context=ctx
+                )
+            )
+            if resp.status == 200:
+                return True
+            else:
+                return False
+        except Exception as e:
+            decky_plugin.logger.info(f"[BACKEND] Internet check failed: {e}")
+            return False
+
+    async def monitor(self):
+        decky_plugin.logger.info("[BACKEND] Starting monitor loop")
+        while True:
+            await asyncio.sleep(10) 
+            intended_enabled = settings.getSetting("intended_enabled", False)
+            is_running = self.singbox_manager.is_running()
+            decky_plugin.logger.debug(f"[BACKEND] Monitor: intended_enabled={intended_enabled}, is_running={is_running}")
+            
+            if intended_enabled:
+                if not is_running:
+                    decky_plugin.logger.info("[BACKEND] Monitor: Process not running, restarting...")
+                    await self.start_shadowsocks()
+                else:
+                    # Check if proxy is working
+                    if not await self.check_proxy_working():
+                        decky_plugin.logger.info("[BACKEND] Monitor: Process running but proxy NOT WORKING, restarting...")
+                        await self.stop_shadowsocks()   # without changing intended_enabled
+                        await asyncio.sleep(2)          # small pause
+                        await self.start_shadowsocks()
+
     
     async def _main(self):
         self.loop = asyncio.get_event_loop()
@@ -63,7 +112,8 @@ class Plugin:
             "server": "example.com",
             "port": 8388,
             "method": "chacha20-ietf-poly1305",
-            "password": ""
+            "password": "",
+            "intended_enabled": False 
         }
         
         for key, value in default_settings.items():
@@ -71,10 +121,18 @@ class Plugin:
                 decky_plugin.logger.info(f"Initializing default {key}: {value}")
                 settings.setSetting(key, value)
         settings.commit()
+        
+        # If intended_enabled=True start sing-box
+        if settings.getSetting("intended_enabled", False):
+            decky_plugin.logger.info("[BACKEND] Auto-starting ShadowSocks on plugin load")
+            await asyncio.sleep(5)
+            await self.start_shadowsocks()
+        
+        # Monitoring task
+        self.loop.create_task(self.monitor())
     
     async def _unload(self):
-        # Ensure sing-box is stopped when the plugin unloads
-        if self.enabled:
+        if self.singbox_manager.is_running():
             await self.singbox_manager.stop()
         decky_plugin.logger.info("ShadowSocks Plugin unloaded!")
         pass
