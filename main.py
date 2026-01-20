@@ -40,7 +40,7 @@ class Plugin:
         return success
     
     async def stop_shadowsocks(self):
-        decky_plugin.logger.info("[BACKEND] STOP SHADOWSOCKS called")
+        decky_plugin.debug.info("[BACKEND] STOP SHADOWSOCKS called")
         
         success = await self.singbox_manager.stop()
         
@@ -59,27 +59,13 @@ class Plugin:
         return intended_enabled
     
     async def check_proxy_working(self) -> bool:
-        decky_plugin.logger.info("[BACKEND] Checking proxy working state via HTTPS test")
-        
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = True
-        ctx.verify_mode = ssl.CERT_REQUIRED
-
-        loop = asyncio.get_running_loop()
-
+        decky_plugin.logger.info("[BACKEND] Checking proxy via HTTPS (no cert verify)")
+        ctx = ssl._create_unverified_context()
         try:
-            resp = await loop.run_in_executor(
-                None,
-                lambda: urllib.request.urlopen(
-                    "https://google.com", timeout=3, context=ctx
-                )
-            )
-            if resp.status == 200:
-                return True
-            else:
-                return False
+            urllib.request.urlopen("https://google.com", timeout=3, context=ctx)
+            return True
         except Exception as e:
-            decky_plugin.logger.info(f"[BACKEND] Internet check failed: {e}")
+            decky_plugin.logger.warning(f"[BACKEND] Proxy check failed: {e}")
             return False
 
     async def monitor(self):
