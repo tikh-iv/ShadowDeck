@@ -59,7 +59,7 @@ class Plugin:
         return intended_enabled
     
     async def check_proxy_working(self) -> bool:
-        decky_plugin.logger.info("[BACKEND] Checking proxy via HTTPS (no cert verify)")
+        decky_plugin.logger.debug("[BACKEND] Checking proxy via HTTPS (no cert verify)")
         ctx = ssl._create_unverified_context()
         try:
             urllib.request.urlopen("https://google.com", timeout=3, context=ctx)
