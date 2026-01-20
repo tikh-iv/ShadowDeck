@@ -71,7 +71,7 @@ class Plugin:
     async def monitor(self):
         decky_plugin.logger.info("[BACKEND] Starting monitor loop")
         while True:
-            await asyncio.sleep(10) 
+            await asyncio.sleep(5) 
             intended_enabled = settings.getSetting("intended_enabled", False)
             is_running = self.singbox_manager.is_running()
             decky_plugin.logger.debug(f"[BACKEND] Monitor: intended_enabled={intended_enabled}, is_running={is_running}")
