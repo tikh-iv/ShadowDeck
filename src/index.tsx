@@ -116,13 +116,30 @@ function EditPasswordModal({ closeModal, initialValue, onSave }: { closeModal: (
 
 function Content() {
   const METHOD_OPTIONS: DropdownOption[] = [
+    // AEAD
     { label: "chacha20-ietf-poly1305", data: "chacha20-ietf-poly1305" },
+    { label: "xchacha20-ietf-poly1305", data: "xchacha20-ietf-poly1305" },
     { label: "aes-256-gcm", data: "aes-256-gcm" },
     { label: "aes-128-gcm", data: "aes-128-gcm" },
+    // Stream / legacy
     { label: "aes-256-cfb", data: "aes-256-cfb" },
+    { label: "aes-192-cfb", data: "aes-192-cfb" },
     { label: "aes-128-cfb", data: "aes-128-cfb" },
+    { label: "aes-256-ctr", data: "aes-256-ctr" },
+    { label: "aes-192-ctr", data: "aes-192-ctr" },
+    { label: "aes-128-ctr", data: "aes-128-ctr" },
+    { label: "camellia-256-cfb", data: "camellia-256-cfb" },
+    { label: "camellia-192-cfb", data: "camellia-192-cfb" },
+    { label: "camellia-128-cfb", data: "camellia-128-cfb" },
+    { label: "bf-cfb", data: "bf-cfb" },
     { label: "rc4-md5", data: "rc4-md5" },
-    { label: "xchacha20-ietf-poly1305", data: "xchacha20-ietf-poly1305" },
+    { label: "rc4-md5-6", data: "rc4-md5-6" },
+    { label: "salsa20", data: "salsa20" },
+    { label: "chacha20", data: "chacha20" },
+    { label: "seed-cfb", data: "seed-cfb" },
+    { label: "idea-cfb", data: "idea-cfb" },
+    { label: "cast5-cfb", data: "cast5-cfb" },
+    { label: "des-cfb", data: "des-cfb" },
   ];
 
   const [server, setServer] = useState<string>("example.com");
